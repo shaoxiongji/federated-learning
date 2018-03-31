@@ -10,38 +10,25 @@ import os
 from tqdm import tqdm
 import torch
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from torch import autograd
 import torch.optim as optim
 from torchvision import datasets, transforms
-from tensorboardX import SummaryWriter
 
 from options import args_parser
 from FedNets import MLP, CNN
 
 
-class DatasetUser(Dataset):
-    def __init__(self, dataset, idxs):
-        self.dataset = dataset
-        self.idxs = list(idxs)
-
-    def __len__(self):
-        return len(self.idxs)
-
-    def __getitem__(self, item):
-        image, label = self.dataset[self.idxs[item]]
-        return image, label
-
-
 def test(net_g, data_loader):
     # testing
+    net_g.eval()
     test_loss = 0
     correct = 0
     l = len(data_loader)
     for idx, (data, target) in enumerate(data_loader):
         if args.gpu != -1:
             data, target = data.cuda(), target.cuda()
-        data, target = autograd.Variable(data), autograd.Variable(target)
+        data, target = autograd.Variable(data, volatile=True), autograd.Variable(target)
         log_probs = net_g(data)
         test_loss += F.nll_loss(log_probs, target, size_average=False).data[0]
         y_pred = log_probs.data.max(1, keepdim=True)[1]
@@ -59,10 +46,7 @@ if __name__ == '__main__':
     # parse args
     args = args_parser()
 
-    # define paths
-    path_project = os.path.abspath('..')
-
-    tb = SummaryWriter('runs')
+    torch.manual_seed(args.seed)
 
     # load dataset and split users
     if args.dataset == 'mnist':
@@ -93,14 +77,11 @@ if __name__ == '__main__':
     print(net_glob)
 
     # training
-    optimizer = optim.SGD(net_glob.parameters(), lr=args.lr)
+    optimizer = optim.SGD(net_glob.parameters(), lr=args.lr, momentum=args.momentum)
     train_loader = DataLoader(dataset_train, batch_size=64, shuffle=True)
-    cv_loss, cv_acc = [], []
-    val_loss_pre, counter = 0, 0
-    net_best = None
-    val_acc_list, net_list = [], []
 
     list_loss = []
+    net_glob.train()
     for epoch in tqdm(range(args.epochs)):
         batch_loss = []
         for batch_idx, (data, target) in enumerate(train_loader):
@@ -135,7 +116,7 @@ if __name__ == '__main__':
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
                    ]))
-        test_loader = DataLoader(dataset_test, batch_size=args.local_bs, shuffle=False)
+        test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
     else:
         exit('Error: unrecognized dataset')
 
