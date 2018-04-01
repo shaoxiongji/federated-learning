@@ -58,7 +58,7 @@ class LocalUpdate(object):
                 optimizer.step()
                 if self.args.gpu != -1:
                     loss = loss.cpu()
-                if self.args.verbose is True and batch_idx % 10 == 0:
+                if self.args.verbose and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
                                100. * batch_idx / len(self.ldr_train), loss.data[0]))
