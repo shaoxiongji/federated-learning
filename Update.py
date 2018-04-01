@@ -34,14 +34,15 @@ class LocalUpdate(object):
         idxs_train = idxs[:420]
         idxs_val = idxs[420:480]
         idxs_test = idxs[480:]
-        train = DataLoader(DatasetSplit(dataset, idxs_train), batch_size=self.args.local_bs, shuffle=False)
-        val = DataLoader(DatasetSplit(dataset, idxs_val), batch_size=len(idxs_val), shuffle=False)
-        test = DataLoader(DatasetSplit(dataset, idxs_test), batch_size=len(idxs_test), shuffle=False)
+        train = DataLoader(DatasetSplit(dataset, idxs_train), batch_size=self.args.local_bs, shuffle=True)
+        val = DataLoader(DatasetSplit(dataset, idxs_val), batch_size=int(len(idxs_val)/10), shuffle=True)
+        test = DataLoader(DatasetSplit(dataset, idxs_test), batch_size=int(len(idxs_test)/10), shuffle=True)
         return train, val, test
 
     def update_weights(self, net):
+        net.train()
         # train and update
-        optimizer = torch.optim.SGD(net.parameters(), lr=self.args.lr, weight_decay=2)
+        optimizer = torch.optim.SGD(net.parameters(), lr=self.args.lr, momentum=0.5)
 
         epoch_loss = []
         for iter in range(self.args.local_ep):
@@ -57,7 +58,7 @@ class LocalUpdate(object):
                 optimizer.step()
                 if self.args.gpu != -1:
                     loss = loss.cpu()
-                if batch_idx % 1 == 0:
+                if self.args.verbose is True and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
                                100. * batch_idx / len(self.ldr_train), loss.data[0]))
@@ -67,17 +68,17 @@ class LocalUpdate(object):
         return net.state_dict(), sum(epoch_loss) / len(epoch_loss)
 
     def test(self, net):
-        optimizer = torch.optim.SGD(net.parameters(), lr=self.args.lr, weight_decay=2)
-        for iter in range(self.args.local_ep):
-            for batch_idx, (images, labels) in enumerate(self.ldr_train):
-                if self.args.gpu != -1:
-                    images, labels = images.cuda(), labels.cuda()
-                images, labels = autograd.Variable(images), autograd.Variable(labels)
-                net.zero_grad()
-                log_probs = net(images)
-                loss = self.loss_func(log_probs, labels)
-                loss.backward()
-                optimizer.step()
+        # optimizer = torch.optim.SGD(net.parameters(), lr=self.args.lr, weight_decay=2)
+        # for iter in range(self.args.local_ep):
+        #     for batch_idx, (images, labels) in enumerate(self.ldr_train):
+        #         if self.args.gpu != -1:
+        #             images, labels = images.cuda(), labels.cuda()
+        #         images, labels = autograd.Variable(images), autograd.Variable(labels)
+        #         net.zero_grad()
+        #         log_probs = net(images)
+        #         loss = self.loss_func(log_probs, labels)
+        #         loss.backward()
+        #         optimizer.step()
 
         for batch_idx, (images, labels) in enumerate(self.ldr_test):
             if self.args.gpu != -1:

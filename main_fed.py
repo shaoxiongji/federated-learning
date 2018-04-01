@@ -88,6 +88,7 @@ if __name__ == '__main__':
     else:
         exit('Error: unrecognized model')
     print(net_glob)
+    net_glob.train()
 
     # copy weights
     w_glob = net_glob.state_dict()
@@ -103,8 +104,8 @@ if __name__ == '__main__':
         m = max(int(args.frac * args.num_users), 1)
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         for idx in idxs_users:
-            net_local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx], tb=summary)
-            w, loss = net_local.update_weights(net=net_glob)
+            local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx], tb=summary)
+            w, loss = local.update_weights(net=copy.deepcopy(net_glob))
             w_locals.append(copy.deepcopy(w))
             loss_locals.append(copy.deepcopy(loss))
         # update global weights
@@ -123,10 +124,11 @@ if __name__ == '__main__':
     plt.figure()
     plt.plot(range(len(loss_train)), loss_train)
     plt.ylabel('train_loss')
-    plt.savefig('./save/fed_{}_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs, args.frac))
+    plt.savefig('./save/fed_{}_{}_{}_C{}.png'.format(args.dataset, args.model, args.epochs, args.frac))
 
     # testing
     list_acc, list_loss = [], []
+    net_glob.eval()
     for c in tqdm(range(num_users)):
         net_local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[c], tb=summary)
         acc, loss = net_local.test(net=net_glob)
