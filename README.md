@@ -30,15 +30,15 @@ Table 1. results of 10 epochs training with the learning rate of 0.01
 
 | Model     | Acc. of IID | Acc. of Non-IID|
 | -----     | -----       | ----           |
-| FedSGD-MLP|  85.66%     | 72.08%         |
-| FedSGD-CNN|  95.00%     | 74.92%         |
+| FedAVG-MLP|  85.66%     | 72.08%         |
+| FedAVG-CNN|  95.00%     | 74.92%         |
 
 Table 2. results of 50 epochs training with the learning rate of 0.01
 
 | Model     | Acc. of IID | Acc. of Non-IID|
 | -----     | -----       | ----           |
-| FedSGD-MLP| 84.42%      | 88.17%         |
-| FedSGD-CNN| 98.17%      | 89.92%         |
+| FedAVG-MLP| 84.42%      | 88.17%         |
+| FedAVG-CNN| 98.17%      | 89.92%         |
 
 
 ## Requirements
