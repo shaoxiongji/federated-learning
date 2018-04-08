@@ -6,17 +6,10 @@
 .xls
 .xlsx
 .pdf
-.png
-.jpg
-.jpeg
 .json
 
 # macOS
 .DS_Store
-
-
-# processing
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
