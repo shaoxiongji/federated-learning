@@ -6,7 +6,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-import os
 from tqdm import tqdm
 import torch
 import torch.nn.functional as F
@@ -50,7 +49,7 @@ if __name__ == '__main__':
 
     # load dataset and split users
     if args.dataset == 'mnist':
-        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True,
+        dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True,
                    transform=transforms.Compose([
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
@@ -107,11 +106,11 @@ if __name__ == '__main__':
     plt.plot(range(len(list_loss)), list_loss)
     plt.xlabel('epochs')
     plt.ylabel('train loss')
-    plt.savefig('./save/upper_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs))
+    plt.savefig('../save/upper_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs))
 
     # testing
     if args.dataset == 'mnist':
-        dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True,
+        dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True,
                    transform=transforms.Compose([
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))

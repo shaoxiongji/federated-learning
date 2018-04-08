@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     # load dataset and split users
     if args.dataset == 'mnist':
-        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True,
+        dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True,
                    transform=transforms.Compose([
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
@@ -121,7 +121,7 @@ if __name__ == '__main__':
     plt.figure()
     plt.plot(range(len(loss_train)), loss_train)
     plt.ylabel('train_loss')
-    plt.savefig('./save/fed_{}_{}_{}_C{}_iid{}.png'.format(args.dataset, args.model, args.epochs, args.frac, args.iid))
+    plt.savefig('../save/fed_{}_{}_{}_C{}_iid{}.png'.format(args.dataset, args.model, args.epochs, args.frac, args.iid))
 
     # testing
     list_acc, list_loss = [], []
@@ -131,5 +131,5 @@ if __name__ == '__main__':
         acc, loss = net_local.test(net=net_glob)
         list_acc.append(acc)
         list_loss.append(loss)
-    print("average acc:", sum(list_acc)/len(list_acc))
+    print("average acc: {:.2f}%".format(100.*sum(list_acc)/len(list_acc)))
 
