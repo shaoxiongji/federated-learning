@@ -15,10 +15,10 @@ import torch.nn.functional as F
 from torch import autograd
 from tensorboardX import SummaryWriter
 
-from sample_mnist import mnist_iid, mnist_noniid
+from sampling import mnist_iid, mnist_noniid, cifar_iid
 from options import args_parser
 from Update import LocalUpdate
-from FedNets import MLP, CNN
+from FedNets import MLP, CNNMnist, CNNCifar
 from averaging import average_weights
 
 
@@ -59,29 +59,46 @@ if __name__ == '__main__':
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
                    ]))
+        # sample users
+        if args.iid:
+            dict_users = mnist_iid(dataset_train, args.num_users)
+        else:
+            dict_users = mnist_noniid(dataset_train, args.num_users)
+    elif args.dataset == 'cifar':
+        transform = transforms.Compose(
+            [transforms.ToTensor(),
+             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        dataset_train = datasets.CIFAR10('../data/cifar', train=True, transform=transform, target_transform=None, download=True)
+        if args.iid:
+            dict_users = cifar_iid(dataset_train, args.num_users)
+        else:
+            exit('Error: only consider IID setting in CIFAR10')
     else:
         exit('Error: unrecognized dataset')
-    img_size = dataset_train[0][0].shape[-1]
-
-    # sample users
-    if args.iid:
-        dict_users = mnist_iid(dataset_train, args.num_users)
-    else:
-        dict_users = mnist_noniid(dataset_train, args.num_users)
+    img_size = dataset_train[0][0].shape
 
     # build model
-    if args.model == 'cnn':
+    if args.model == 'cnn' and args.dataset == 'cifar':
         if args.gpu != -1:
             torch.cuda.set_device(args.gpu)
-            net_glob = CNN(args=args).cuda()
+            net_glob = CNNCifar(args=args).cuda()
         else:
-            net_glob = CNN(args=args)
+            net_glob = CNNCifar(args=args)
+    elif args.model == 'cnn' and args.dataset == 'mnist':
+        if args.gpu != -1:
+            torch.cuda.set_device(args.gpu)
+            net_glob = CNNMnist(args=args).cuda()
+        else:
+            net_glob = CNNMnist(args=args)
     elif args.model == 'mlp':
+        len_in = 1
+        for x in img_size:
+            len_in *= x
         if args.gpu != -1:
             torch.cuda.set_device(args.gpu)
-            net_glob = MLP(dim_in=img_size*img_size, dim_hidden=64, dim_out=args.num_classes).cuda()
+            net_glob = MLP(dim_in=len_in, dim_hidden=64, dim_out=args.num_classes).cuda()
         else:
-            net_glob = MLP(dim_in=img_size*img_size, dim_hidden=64, dim_out=args.num_classes)
+            net_glob = MLP(dim_in=len_in, dim_hidden=64, dim_out=args.num_classes)
     else:
         exit('Error: unrecognized model')
     print(net_glob)

@@ -15,7 +15,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 
 from options import args_parser
-from FedNets import MLP, CNN
+from FedNets import MLP, CNNMnist, CNNCifar
 
 
 def test(net_g, data_loader):
@@ -54,23 +54,38 @@ if __name__ == '__main__':
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
                    ]))
+        img_size = dataset_train[0][0].shape
+    elif args.dataset == 'cifar':
+        transform = transforms.Compose(
+            [transforms.ToTensor(),
+             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        dataset_train = datasets.CIFAR10('../data/cifar', train=True, transform=transform, target_transform=None, download=True)
+        img_size = dataset_train[0][0].shape
     else:
         exit('Error: unrecognized dataset')
-    img_size = dataset_train[0][0].shape[-1]
 
     # build model
-    if args.model == 'cnn':
+    if args.model == 'cnn' and args.dataset == 'cifar':
         if args.gpu != -1:
             torch.cuda.set_device(args.gpu)
-            net_glob = CNN(args=args).cuda()
+            net_glob = CNNCifar(args=args).cuda()
         else:
-            net_glob = CNN(args=args)
+            net_glob = CNNCifar(args=args)
+    elif args.model == 'cnn' and args.dataset == 'mnist':
+        if args.gpu != -1:
+            torch.cuda.set_device(args.gpu)
+            net_glob = CNNMnist(args=args).cuda()
+        else:
+            net_glob = CNNMnist(args=args)
     elif args.model == 'mlp':
+        len_in = 1
+        for x in img_size:
+            len_in *= x
         if args.gpu != -1:
             torch.cuda.set_device(args.gpu)
-            net_glob = MLP(dim_in=img_size*img_size, dim_hidden=64, dim_out=args.num_classes).cuda()
+            net_glob = MLP(dim_in=len_in, dim_hidden=64, dim_out=args.num_classes).cuda()
         else:
-            net_glob = MLP(dim_in=img_size*img_size, dim_hidden=64, dim_out=args.num_classes)
+            net_glob = MLP(dim_in=len_in, dim_hidden=64, dim_out=args.num_classes)
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -106,7 +121,7 @@ if __name__ == '__main__':
     plt.plot(range(len(list_loss)), list_loss)
     plt.xlabel('epochs')
     plt.ylabel('train loss')
-    plt.savefig('../save/upper_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs))
+    plt.savefig('../save/nn_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs))
 
     # testing
     if args.dataset == 'mnist':
@@ -115,6 +130,12 @@ if __name__ == '__main__':
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
                    ]))
+        test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
+    elif args.dataset == 'cifar':
+        transform = transforms.Compose(
+            [transforms.ToTensor(),
+             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        dataset_test = datasets.CIFAR10('../data/cifar', train=False, transform=transform, target_transform=None, download=True)
         test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
     else:
         exit('Error: unrecognized dataset')
