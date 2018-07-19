@@ -19,7 +19,7 @@ Federated learning with MLP and CNN is produced by:
 See the arguments in [options.py](optifons.py). 
 
 For example:
-> python main_fed.py --dataset mnist --model cnn --epochs 50 --gpu 0 
+> python main_fed.py --dataset mnist --num_channels 1 --model cnn --epochs 50 --gpu 0 
 
 
 ## Results
