@@ -1,7 +1,7 @@
 # Federated Learning
 
 This is partly the reproduction of the paper of [Communication-Efficient Learning of Deep Networks from Decentralized Data](https://arxiv.org/abs/1602.05629)   
-Only experiments on MNIST (both IID and non-IID) is produced by far.
+Only experiments on MNIST and CIFAR10 (both IID and non-IID) is produced by far.
 
 Note: The scripts will be slow without the implementation of parallel computing. 
 
@@ -10,8 +10,8 @@ Note: The scripts will be slow without the implementation of parallel computing.
 The MLP and CNN models are produced by:
 > python [main_nn.py](main_nn.py)
 
-The testing accuracy of MLP: 92.14% (10 epochs training) with the learning rate of 0.01.
-The testing accuracy of CNN: 98.37% (10 epochs training) with the learning rate of 0.01.
+The testing accuracy of MLP on MINST: 92.14% (10 epochs training) with the learning rate of 0.01.
+The testing accuracy of CNN on MINST: 98.37% (10 epochs training) with the learning rate of 0.01.
 
 Federated learning with MLP and CNN is produced by:
 > python [main_fed.py](main_fed.py)
