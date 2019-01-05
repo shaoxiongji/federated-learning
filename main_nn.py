@@ -14,8 +14,8 @@ from torch import autograd
 import torch.optim as optim
 from torchvision import datasets, transforms
 
-from options import args_parser
-from FedNets import MLP, CNNMnist, CNNCifar
+from utils.options import args_parser
+from models.FedNets import MLP, CNNMnist, CNNCifar
 
 
 def test(net_g, data_loader):

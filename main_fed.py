@@ -15,11 +15,11 @@ import torch.nn.functional as F
 from torch import autograd
 from tensorboardX import SummaryWriter
 
-from sampling import mnist_iid, mnist_noniid, cifar_iid
-from options import args_parser
-from Update import LocalUpdate
-from FedNets import MLP, CNNMnist, CNNCifar
-from averaging import average_weights
+from utils.sampling import mnist_iid, mnist_noniid, cifar_iid
+from utils.options import args_parser
+from models.Update import LocalUpdate
+from models.FedNets import MLP, CNNMnist, CNNCifar
+from models.averaging import average_weights
 
 
 def test(net_g, data_loader, args):
