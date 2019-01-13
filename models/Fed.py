@@ -7,7 +7,7 @@ import torch
 from torch import nn
 
 
-def average_weights(w):
+def FedAvg(w):
     w_avg = copy.deepcopy(w[0])
     for k in w_avg.keys():
         for i in range(1, len(w)):

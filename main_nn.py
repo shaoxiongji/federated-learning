@@ -6,16 +6,14 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from tqdm import tqdm
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from torch import autograd
 import torch.optim as optim
 from torchvision import datasets, transforms
 
 from utils.options import args_parser
-from models.FedNets import MLP, CNNMnist, CNNCifar
+from models.Nets import MLP, CNNMnist, CNNCifar
 
 
 def test(net_g, data_loader):
@@ -25,11 +23,9 @@ def test(net_g, data_loader):
     correct = 0
     l = len(data_loader)
     for idx, (data, target) in enumerate(data_loader):
-        if args.gpu != -1:
-            data, target = data.cuda(), target.cuda()
-        data, target = autograd.Variable(data, volatile=True), autograd.Variable(target)
+        data, target = data.to(args.device), target.to(args.device)
         log_probs = net_g(data)
-        test_loss += F.nll_loss(log_probs, target, size_average=False).data[0]
+        test_loss += F.cross_entropy(log_probs, target).item()
         y_pred = log_probs.data.max(1, keepdim=True)[1]
         correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
 
@@ -44,12 +40,13 @@ def test(net_g, data_loader):
 if __name__ == '__main__':
     # parse args
     args = args_parser()
+    args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
 
     torch.manual_seed(args.seed)
 
     # load dataset and split users
     if args.dataset == 'mnist':
-        dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True,
+        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True,
                    transform=transforms.Compose([
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
@@ -59,33 +56,21 @@ if __name__ == '__main__':
         transform = transforms.Compose(
             [transforms.ToTensor(),
              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        dataset_train = datasets.CIFAR10('../data/cifar', train=True, transform=transform, target_transform=None, download=True)
+        dataset_train = datasets.CIFAR10('./data/cifar', train=True, transform=transform, target_transform=None, download=True)
         img_size = dataset_train[0][0].shape
     else:
         exit('Error: unrecognized dataset')
 
     # build model
     if args.model == 'cnn' and args.dataset == 'cifar':
-        if args.gpu != -1:
-            torch.cuda.set_device(args.gpu)
-            net_glob = CNNCifar(args=args).cuda()
-        else:
-            net_glob = CNNCifar(args=args)
+        net_glob = CNNCifar(args=args).to(args.device)
     elif args.model == 'cnn' and args.dataset == 'mnist':
-        if args.gpu != -1:
-            torch.cuda.set_device(args.gpu)
-            net_glob = CNNMnist(args=args).cuda()
-        else:
-            net_glob = CNNMnist(args=args)
+        net_glob = CNNMnist(args=args).to(args.device)
     elif args.model == 'mlp':
         len_in = 1
         for x in img_size:
             len_in *= x
-        if args.gpu != -1:
-            torch.cuda.set_device(args.gpu)
-            net_glob = MLP(dim_in=len_in, dim_hidden=64, dim_out=args.num_classes).cuda()
-        else:
-            net_glob = MLP(dim_in=len_in, dim_hidden=64, dim_out=args.num_classes)
+        net_glob = MLP(dim_in=len_in, dim_hidden=64, dim_out=args.num_classes).to(args.device)
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -96,22 +81,20 @@ if __name__ == '__main__':
 
     list_loss = []
     net_glob.train()
-    for epoch in tqdm(range(args.epochs)):
+    for epoch in range(args.epochs):
         batch_loss = []
         for batch_idx, (data, target) in enumerate(train_loader):
-            if args.gpu != -1:
-                data, target = data.cuda(), target.cuda()
-            data, target = autograd.Variable(data), autograd.Variable(target)
+            data, target = data.to(args.device), target.to(args.device)
             optimizer.zero_grad()
             output = net_glob(data)
-            loss = F.nll_loss(output, target)
+            loss = F.cross_entropy(output, target)
             loss.backward()
             optimizer.step()
             if batch_idx % 50 == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, batch_idx * len(data), len(train_loader.dataset),
-                           100. * batch_idx / len(train_loader), loss.data[0]))
-            batch_loss.append(loss.data[0])
+                           100. * batch_idx / len(train_loader), loss.item()))
+            batch_loss.append(loss.item())
         loss_avg = sum(batch_loss)/len(batch_loss)
         print('\nTrain loss:', loss_avg)
         list_loss.append(loss_avg)
@@ -121,11 +104,11 @@ if __name__ == '__main__':
     plt.plot(range(len(list_loss)), list_loss)
     plt.xlabel('epochs')
     plt.ylabel('train loss')
-    plt.savefig('../save/nn_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs))
+    plt.savefig('./save/nn_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs))
 
     # testing
     if args.dataset == 'mnist':
-        dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True,
+        dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True,
                    transform=transforms.Compose([
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
@@ -135,7 +118,7 @@ if __name__ == '__main__':
         transform = transforms.Compose(
             [transforms.ToTensor(),
              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        dataset_test = datasets.CIFAR10('../data/cifar', train=False, transform=transform, target_transform=None, download=True)
+        dataset_test = datasets.CIFAR10('./data/cifar', train=False, transform=transform, target_transform=None, download=True)
         test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
     else:
         exit('Error: unrecognized dataset')

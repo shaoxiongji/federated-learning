@@ -30,7 +30,7 @@ def mnist_noniid(dataset, num_users):
     """
     num_shards, num_imgs = 200, 300
     idx_shard = [i for i in range(num_shards)]
-    dict_users = {i: np.array([]) for i in range(num_users)}
+    dict_users = {i: np.array([], dtype='int64') for i in range(num_users)}
     idxs = np.arange(num_shards*num_imgs)
     labels = dataset.train_labels.numpy()
 
@@ -64,7 +64,7 @@ def cifar_iid(dataset, num_users):
 
 
 if __name__ == '__main__':
-    dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True,
+    dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True,
                                    transform=transforms.Compose([
                                        transforms.ToTensor(),
                                        transforms.Normalize((0.1307,), (0.3081,))

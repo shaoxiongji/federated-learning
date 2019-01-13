@@ -25,7 +25,7 @@ class DatasetSplit(Dataset):
 class LocalUpdate(object):
     def __init__(self, args, dataset, idxs, tb):
         self.args = args
-        self.loss_func = nn.NLLLoss()
+        self.loss_func = nn.CrossEntropyLoss()
         self.ldr_train, self.ldr_val, self.ldr_test = self.train_val_test(dataset, list(idxs))
         self.tb = tb
 
@@ -48,22 +48,20 @@ class LocalUpdate(object):
         for iter in range(self.args.local_ep):
             batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
-                if self.args.gpu != -1:
-                    images, labels = images.cuda(), labels.cuda()
-                images, labels = autograd.Variable(images), autograd.Variable(labels)
+                images, labels = images.to(self.args.device), labels.to(self.args.device)
                 net.zero_grad()
                 log_probs = net(images)
                 loss = self.loss_func(log_probs, labels)
                 loss.backward()
                 optimizer.step()
-                if self.args.gpu != -1:
-                    loss = loss.cpu()
+                # if self.args.gpu != -1:
+                #     loss = loss.cpu()
                 if self.args.verbose and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
-                               100. * batch_idx / len(self.ldr_train), loss.data[0]))
-                self.tb.add_scalar('loss', loss.data[0])
-                batch_loss.append(loss.data[0])
+                               100. * batch_idx / len(self.ldr_train), loss.item()))
+                self.tb.add_scalar('loss', loss.item())
+                batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
         return net.state_dict(), sum(epoch_loss) / len(epoch_loss)
 
@@ -81,15 +79,13 @@ class LocalUpdate(object):
         #         optimizer.step()
 
         for batch_idx, (images, labels) in enumerate(self.ldr_test):
-            if self.args.gpu != -1:
-                images, labels = images.cuda(), labels.cuda()
-            images, labels = autograd.Variable(images), autograd.Variable(labels)
+            images, labels = images.to(self.args.device), labels.to(self.args.device)
             log_probs = net(images)
             loss = self.loss_func(log_probs, labels)
-        if self.args.gpu != -1:
-            loss = loss.cpu()
-            log_probs = log_probs.cpu()
-            labels = labels.cpu()
-        y_pred = np.argmax(log_probs.data, axis=1)
+        # if self.args.gpu != -1:
+        #     loss = loss.cpu()
+        #     log_probs = log_probs.cpu()
+        #     labels = labels.cpu()
+        y_pred = torch.argmax(log_probs.data, dim=1)
         acc = metrics.accuracy_score(y_true=labels.data, y_pred=y_pred)
-        return  acc, loss.data[0]
+        return  acc, loss.item()

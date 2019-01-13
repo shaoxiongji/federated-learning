@@ -21,19 +21,18 @@ def args_parser():
     parser.add_argument('--kernel_sizes', type=str, default='3,4,5',
                         help='comma-separated kernel size to use for convolution')
     parser.add_argument('--norm', type=str, default='batch_norm', help="batch_norm, layer_norm, or None")
-    parser.add_argument('--num_filters', type=int, default=32,
-                        help="number of filters for conv nets -- 32 for miniimagenet, 64 for omiglot.")
+    parser.add_argument('--num_filters', type=int, default=32, help="number of filters for conv nets")
     parser.add_argument('--max_pool', type=str, default='True',
                         help="Whether use max pooling rather than strided convolutions")
 
     # other arguments
-    parser.add_argument('--dataset', type=str, default='cifar', help="name of dataset")
-    parser.add_argument('--iid', type=int, default=0, help='whether i.i.d or not, 1 for iid, 0 for non-iid')
+    parser.add_argument('--dataset', type=str, default='mnist', help="name of dataset")
+    parser.add_argument('--iid', action='store_true', help='whether i.i.d or not')
     parser.add_argument('--num_classes', type=int, default=10, help="number of classes")
     parser.add_argument('--num_channels', type=int, default=3, help="number of channels of imges")
     parser.add_argument('--gpu', type=int, default=1, help="GPU ID")
     parser.add_argument('--stopping_rounds', type=int, default=10, help='rounds of early stopping')
-    parser.add_argument('--verbose', type=int, default=1, help='verbose print, 1 for True, 0 for False')
+    parser.add_argument('--verbose', action='store_true', help='verbose print')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     args = parser.parse_args()
     return args
