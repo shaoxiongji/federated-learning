@@ -39,7 +39,7 @@ class LocalUpdate(object):
         test = DataLoader(DatasetSplit(dataset, idxs_test), batch_size=int(len(idxs_test)/10), shuffle=True)
         return train, val, test
 
-    def update_weights(self, net):
+    def train(self, net):
         net.train()
         # train and update
         optimizer = torch.optim.SGD(net.parameters(), lr=self.args.lr, momentum=0.5)
