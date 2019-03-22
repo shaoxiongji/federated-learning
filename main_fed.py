@@ -5,39 +5,17 @@
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import os
 import copy
 import numpy as np
 from torchvision import datasets, transforms
 import torch
-import torch.nn.functional as F
-from tensorboardX import SummaryWriter
 
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid
 from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
 from models.Fed import FedAvg
-
-
-def test(net_g, data_loader, args):
-    # testing
-    test_loss = 0
-    correct = 0
-    l = len(data_loader)
-    for idx, (data, target) in enumerate(data_loader):
-        if args.gpu != -1:
-            data, target = data.cuda(), target.cuda()
-        log_probs = net_g(data)
-        test_loss += F.cross_entropy(log_probs, target, size_average=False).item() # sum up batch loss
-        y_pred = log_probs.data.max(1, keepdim=True)[1] # get the index of the max log-probability
-        correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
-
-    test_loss /= len(data_loader.dataset)
-    print('\nTest set: Average loss: {:.4f} \nAccuracy: {}/{} ({:.2f}%)\n'.format(
-        test_loss, correct, len(data_loader.dataset),
-        100. * correct / len(data_loader.dataset)))
-    return correct, test_loss
+from models.test import test_img
 
 
 if __name__ == '__main__':
@@ -45,25 +23,20 @@ if __name__ == '__main__':
     args = args_parser()
     args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
 
-    summary = SummaryWriter('local')
-
     # load dataset and split users
     if args.dataset == 'mnist':
-        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True,
-                   transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
-                   ]))
+        trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True, transform=trans_mnist)
+        dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True, transform=trans_mnist)
         # sample users
         if args.iid:
             dict_users = mnist_iid(dataset_train, args.num_users)
         else:
             dict_users = mnist_noniid(dataset_train, args.num_users)
     elif args.dataset == 'cifar':
-        transform = transforms.Compose(
-            [transforms.ToTensor(),
-             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        dataset_train = datasets.CIFAR10('./data/cifar', train=True, transform=transform, target_transform=None, download=True)
+        trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        dataset_train = datasets.CIFAR10('../data/cifar', train=True, download=True, transform=trans_cifar)
+        dataset_test = datasets.CIFAR10('../data/cifar', train=False, download=True, transform=trans_cifar)
         if args.iid:
             dict_users = cifar_iid(dataset_train, args.num_users)
         else:
@@ -95,13 +68,15 @@ if __name__ == '__main__':
     cv_loss, cv_acc = [], []
     val_loss_pre, counter = 0, 0
     net_best = None
+    best_loss = None
     val_acc_list, net_list = [], []
+
     for iter in range(args.epochs):
         w_locals, loss_locals = [], []
         m = max(int(args.frac * args.num_users), 1)
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         for idx in idxs_users:
-            local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx], tb=summary)
+            local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
             w, loss = local.train(net=copy.deepcopy(net_glob).to(args.device))
             w_locals.append(copy.deepcopy(w))
             loss_locals.append(copy.deepcopy(loss))
@@ -120,15 +95,12 @@ if __name__ == '__main__':
     plt.figure()
     plt.plot(range(len(loss_train)), loss_train)
     plt.ylabel('train_loss')
-    plt.savefig('./save/fed_{}_{}_{}_C{}_iid{}.png'.format(args.dataset, args.model, args.epochs, args.frac, args.iid))
+    plt.savefig('./log/fed_{}_{}_{}_C{}_iid{}.png'.format(args.dataset, args.model, args.epochs, args.frac, args.iid))
 
     # testing
-    list_acc, list_loss = [], []
     net_glob.eval()
-    for c in range(args.num_users):
-        net_local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[c], tb=summary)
-        acc, loss = net_local.test(net=net_glob)
-        list_acc.append(acc)
-        list_loss.append(loss)
-    print("Average testing acc.: {:.2f}%".format(100.*sum(list_acc)/len(list_acc)))
+    acc_train, loss_train = test_img(net_glob, dataset_train, args)
+    acc_test, loss_test = test_img(net_glob, dataset_test, args)
+    print("Training accuracy: {:.2f}".format(acc_train))
+    print("Testing accuracy: {:.2f}".format(acc_test))
 

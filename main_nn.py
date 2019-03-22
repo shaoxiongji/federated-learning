@@ -104,7 +104,7 @@ if __name__ == '__main__':
     plt.plot(range(len(list_loss)), list_loss)
     plt.xlabel('epochs')
     plt.ylabel('train loss')
-    plt.savefig('./save/nn_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs))
+    plt.savefig('./log/nn_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs))
 
     # testing
     if args.dataset == 'mnist':
