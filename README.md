@@ -40,8 +40,25 @@ Table 2. results of 50 epochs training with the learning rate of 0.01
 | FedAVG-MLP| 84.42%      | 88.17%         |
 | FedAVG-CNN| 98.17%      | 89.92%         |
 
+## References
+```
+@article{mcmahan2016communication,
+  title={Communication-efficient learning of deep networks from decentralized data},
+  author={McMahan, H Brendan and Moore, Eider and Ramage, Daniel and Hampson, Seth and others},
+  journal={arXiv preprint arXiv:1602.05629},
+  year={2016}
+}
+
+@article{ji2018learning,
+  title={Learning Private Neural Language Modeling with Attentive Aggregation},
+  author={Ji, Shaoxiong and Pan, Shirui and Long, Guodong and Li, Xue and Jiang, Jing and Huang, Zi},
+  journal={arXiv preprint arXiv:1812.07108},
+  year={2018}
+}
+```
+
+Attentive Federated Learning [[Paper](https://arxiv.org/abs/1812.07108)] [[Code](https://github.com/shaoxiongji/fed-att)]
 
 ## Requirements
-python 3.6
-
-pytorch 0.4
+python 3.6  
+pytorch>=0.4
