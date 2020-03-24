@@ -5,13 +5,14 @@ Only experiments on MNIST and CIFAR10 (both IID and non-IID) is produced by far.
 
 Note: The scripts will be slow without the implementation of parallel computing. 
 
+## Requirements
+python>=3.6  
+pytorch>=0.4
+
 ## Run
 
 The MLP and CNN models are produced by:
 > python [main_nn.py](main_nn.py)
-
-The testing accuracy of MLP on MINST: 92.14% (10 epochs training) with the learning rate of 0.01.
-The testing accuracy of CNN on MINST: 98.37% (10 epochs training) with the learning rate of 0.01.
 
 Federated learning with MLP and CNN is produced by:
 > python [main_fed.py](main_fed.py)
@@ -19,8 +20,9 @@ Federated learning with MLP and CNN is produced by:
 See the arguments in [options.py](utils/options.py). 
 
 For example:
-> python main_fed.py --dataset mnist --num_channels 1 --model cnn --epochs 50 --gpu 0 
+> python main_fed.py --dataset mnist --iid --num_channels 1 --model cnn --epochs 50 --gpu 0  
 
+NB: for CIFAR-10, `num_channels` must be 3.
 
 ## Results
 ### MNIST
@@ -30,35 +32,25 @@ Table 1. results of 10 epochs training with the learning rate of 0.01
 
 | Model     | Acc. of IID | Acc. of Non-IID|
 | -----     | -----       | ----           |
-| FedAVG-MLP|  85.66%     | 72.08%         |
-| FedAVG-CNN|  95.00%     | 74.92%         |
+| FedAVG-MLP|  94.57%     | 70.44%         |
+| FedAVG-CNN|  96.59%     | 77.72%         |
 
 Table 2. results of 50 epochs training with the learning rate of 0.01
 
 | Model     | Acc. of IID | Acc. of Non-IID|
 | -----     | -----       | ----           |
-| FedAVG-MLP| 84.42%      | 88.17%         |
-| FedAVG-CNN| 98.17%      | 89.92%         |
+| FedAVG-MLP| 97.21%      | 93.03%         |
+| FedAVG-CNN| 98.60%      | 93.81%         |
+
+
+## Ackonwledgements
+Acknowledgements give to [youkaichao](https://github.com/youkaichao).
 
 ## References
-```
-@article{mcmahan2016communication,
-  title={Communication-efficient learning of deep networks from decentralized data},
-  author={McMahan, H Brendan and Moore, Eider and Ramage, Daniel and Hampson, Seth and others},
-  journal={arXiv preprint arXiv:1602.05629},
-  year={2016}
-}
+McMahan, Brendan, Eider Moore, Daniel Ramage, Seth Hampson, and Blaise Aguera y Arcas. Communication-Efficient Learning of Deep Networks from Decentralized Data. In Artificial Intelligence and Statistics (AISTATS), 2017.
 
-@article{ji2018learning,
-  title={Learning Private Neural Language Modeling with Attentive Aggregation},
-  author={Ji, Shaoxiong and Pan, Shirui and Long, Guodong and Li, Xue and Jiang, Jing and Huang, Zi},
-  journal={arXiv preprint arXiv:1812.07108},
-  year={2018}
-}
-```
+Shaoxiong Ji, Shirui Pan, Guodong Long, Xue Li, Jing Jiang, and Zi Huang. Learning private neural language modeling with attentive aggregation. In the 2019 International Joint Conference on Neural Networks (IJCNN), 2019. [[Paper](https://arxiv.org/abs/1812.07108)] [[Code](https://github.com/shaoxiongji/fed-att)]
 
-Attentive Federated Learning [[Paper](https://arxiv.org/abs/1812.07108)] [[Code](https://github.com/shaoxiongji/fed-att)]
+Jing Jiang, Shaoxiong Ji, and Guodong Long. Decentralized knowledge acquisition for mobile internet applications. World Wide Web, 2020. [[Paper](https://link.springer.com/article/10.1007/s11280-019-00775-w)]
 
-## Requirements
-python 3.6  
-pytorch>=0.4
+
