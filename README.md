@@ -22,6 +22,8 @@ See the arguments in [options.py](utils/options.py).
 For example:
 > python main_fed.py --dataset mnist --iid --num_channels 1 --model cnn --epochs 50 --gpu 0  
 
+`--all_clients` for averaging over all client models
+
 NB: for CIFAR-10, `num_channels` must be 3.
 
 ## Results

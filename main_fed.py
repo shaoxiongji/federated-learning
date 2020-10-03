@@ -71,14 +71,22 @@ if __name__ == '__main__':
     best_loss = None
     val_acc_list, net_list = [], []
 
+    if args.all_clients: 
+        print("Aggregation over all clients")
+        w_locals = [w_glob for i in range(args.num_users)]
     for iter in range(args.epochs):
-        w_locals, loss_locals = [], []
+        loss_locals = []
+        if not args.all_clients:
+            w_locals = []
         m = max(int(args.frac * args.num_users), 1)
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         for idx in idxs_users:
             local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
             w, loss = local.train(net=copy.deepcopy(net_glob).to(args.device))
-            w_locals.append(copy.deepcopy(w))
+            if args.all_clients:
+                w_locals[idx] = copy.deepcopy(w)
+            else:
+                w_locals.append(copy.deepcopy(w))
             loss_locals.append(copy.deepcopy(loss))
         # update global weights
         w_glob = FedAvg(w_locals)
