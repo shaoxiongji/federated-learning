@@ -23,7 +23,7 @@ def test_img(net_g, datatest, args):
         test_loss += F.cross_entropy(log_probs, target, reduction='sum').item()
         # get the index of the max log-probability
         y_pred = log_probs.data.max(1, keepdim=True)[1]
-        correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
+        correct += y_pred.eq(target.data.view_as(y_pred)).long().tpu().sum()
 
     test_loss /= len(data_loader.dataset)
     accuracy = 100.00 * correct / len(data_loader.dataset)
