@@ -20,10 +20,14 @@ from models.test import test_img
 
 if __name__ == '__main__':
     # parse args
+    # if 這邊是調用option 的資料
     args = args_parser()
-    args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
+    # How we set up the  function  if you don't use gpu you don't 
 
-    # load dataset and split users
+    args.device = torch.device('cuda:{}'.format(args.tpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
+
+    # load dataset and split users 
+    # search the iid data if you want more you need set up by tfdata set
     if args.dataset == 'mnist':
         trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
         dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True, transform=trans_mnist)
