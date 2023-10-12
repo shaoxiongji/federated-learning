@@ -17,6 +17,9 @@ def args_parser():
     parser.add_argument('--momentum', type=float, default=0.5, help="SGD momentum (default: 0.5)")
     parser.add_argument('--split', type=str, default='user', help="train-test split type, user or sample")
 
+    # Federated Aggregation
+    parser.add_argument('--global_aggr', type=str, default='FedAvg', help="what global aggregation model will be used")
+
     # model arguments
     parser.add_argument('--model', type=str, default='mlp', help='model name')
     parser.add_argument('--kernel_num', type=int, default=9, help='number of each kind of kernel')
