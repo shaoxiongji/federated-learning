@@ -9,6 +9,7 @@ import copy
 import numpy as np
 from torchvision import datasets, transforms
 import torch
+import torchvision
 
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid
 from utils.options import args_parser
@@ -55,6 +56,9 @@ if __name__ == '__main__':
         for x in img_size:
             len_in *= x
         net_glob = MLP(dim_in=len_in, dim_hidden=200, dim_out=args.num_classes).to(args.device)
+    elif args.model == 'resnet' and args.dataset == 'mnist':
+        net_glob = torchvision.models.resnet18()
+        net_glob.conv1 = torch.nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -91,9 +95,7 @@ if __name__ == '__main__':
         # update global weights
         if args.global_aggr == 'FedAvg':
             w_glob = FedAvg(w_locals)
-            print('this actually runs')
-        else:
-            print('something wrong')
+            
             
             
 
