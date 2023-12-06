@@ -1,5 +1,8 @@
 # Federated Learning [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4321561.svg)](https://doi.org/10.5281/zenodo.4321561)
 
+This is a fork of the federated learning framework found at: https://github.com/shaoxiongji/federated-learning
+We have edited this framework to run advanced convolutional neural networks, different datasets as well as to implement differential privacy. 
+
 This is partly the reproduction of the paper of [Communication-Efficient Learning of Deep Networks from Decentralized Data](https://arxiv.org/abs/1602.05629)   
 Only experiments on MNIST and CIFAR10 (both IID and non-IID) is produced by far.
 
@@ -16,6 +19,13 @@ The MLP and CNN models are produced by:
 
 Federated learning with MLP and CNN is produced by:
 > python [main_fed.py](main_fed.py)
+
+Federated learning with differential privacy:
+> python [main_fed_DP.py](main_fed_DP.py)
+
+Advanced CNN model simulation with differential privacy: 
+> python [main_nn_DP.py](main_nn_DP.py)
+
 
 See the arguments in [options.py](utils/options.py). 
 
