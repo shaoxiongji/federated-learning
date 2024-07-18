@@ -71,6 +71,10 @@ if __name__ == '__main__':
     best_loss = None
     val_acc_list, net_list = [], []
 
+    dict_len = []
+    for i in range(args.num_users):
+        dict_len.append(len(dict_users[i]))
+
     if args.all_clients: 
         print("Aggregation over all clients")
         w_locals = [w_glob for i in range(args.num_users)]
@@ -89,7 +93,7 @@ if __name__ == '__main__':
                 w_locals.append(copy.deepcopy(w))
             loss_locals.append(copy.deepcopy(loss))
         # update global weights
-        w_glob = FedAvg(w_locals)
+        w_glob = FedAvg(w_locals, dict_len)
 
         # copy weight to net_glob
         net_glob.load_state_dict(w_glob)
