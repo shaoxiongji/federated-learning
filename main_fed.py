@@ -16,6 +16,7 @@ from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
 from models.Fed import FedAvg
 from models.test import test_img
+from models.quantization import compress_state_dict, decompress_state_dict
 
 
 if __name__ == '__main__':
@@ -70,6 +71,7 @@ if __name__ == '__main__':
     net_best = None
     best_loss = None
     val_acc_list, net_list = [], []
+    residuals_by_user = {}
 
     if args.all_clients: 
         print("Aggregation over all clients")
@@ -83,10 +85,17 @@ if __name__ == '__main__':
         for idx in idxs_users:
             local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
             w, loss = local.train(net=copy.deepcopy(net_glob).to(args.device))
-            if args.all_clients:
-                w_locals[idx] = copy.deepcopy(w)
+            if args.quantize:
+                res = residuals_by_user.get(idx)
+                compressed_w, new_res = compress_state_dict(w, block_size=args.block_size, residuals=res)
+                residuals_by_user[idx] = new_res
+                w_transmitted = decompress_state_dict(compressed_w)
             else:
-                w_locals.append(copy.deepcopy(w))
+                w_transmitted = copy.deepcopy(w)
+            if args.all_clients:
+                w_locals[idx] = copy.deepcopy(w_transmitted)
+            else:
+                w_locals.append(copy.deepcopy(w_transmitted))
             loss_locals.append(copy.deepcopy(loss))
         # update global weights
         w_glob = FedAvg(w_locals)

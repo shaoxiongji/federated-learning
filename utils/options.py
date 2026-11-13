@@ -37,5 +37,7 @@ def args_parser():
     parser.add_argument('--verbose', action='store_true', help='verbose print')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     parser.add_argument('--all_clients', action='store_true', help='aggregation over all clients')
+    parser.add_argument('--quantize', action='store_true', help='enable block-wise INT4 quantization for client communication')
+    parser.add_argument('--block_size', type=int, default=64, help='block size for tensor quantization')
     args = parser.parse_args()
     return args
